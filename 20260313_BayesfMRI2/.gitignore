@@ -1,0 +1,19 @@
+# Keep external inputs and generated outputs out of this code directory.
+20251123_1stlevel/
+results/
+plots/
+*.csv
+*.rds
+*.Rdata
+*.RData
+*.nii
+*.nii.gz
+*.png
+*.PNG
+*.pdf
+*.log
+.Rhistory
+.RData
+.DS_Store
+._*
+.~lock.*#

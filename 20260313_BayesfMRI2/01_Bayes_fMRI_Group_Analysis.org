@@ -1,0 +1,127 @@
+#+TITLE: NMD Group-Level Analysis With BayesfMRI
+
+* Scope and provenance
+
+This directory contains the main group-level analysis scripts and documentation.
+The original working directory is:
+
+#+begin_example
+/Volumes/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/20260313_BayesfMRI2
+#+end_example
+
+First-level models were supplied by collaborators. Yunong converted the supplied
+=bglm.Rdata= objects to =bglm.rds= and performed the group analysis and plotting.
+The archived main analysis used 40 participants: 22 controls (CTR) and 18
+participants with depression (DEP). The first-level effect is =CL_gt_CH=
+(hand clenching versus crosshair fixation).
+
+Only code and documentation are included here. Subject data, CSV input matrices,
+model objects, run logs, and figures remain outside Git. Version comparisons,
+small-sample tests, and individual-level plotting are not included.
+
+* Scripts and execution order
+
+| Script | Original source | Purpose |
+|--------+-----------------+---------|
+| [[file:scripts/01_convert_1st_level_results.R][01_convert_1st_level_results.R]] | Commented conversion block in code/bglm2.R | Convert first-level model objects once |
+| [[file:scripts/02_group_level_analysis.R][02_group_level_analysis.R]] | code/bglm2.R | Fit and save the main group model |
+| [[file:scripts/03_group_level_plots.R][03_group_level_plots.R]] | code/bglm2_plot.R | Plot the saved group results |
+
+Set =data_path= near the top of each script to the external analysis directory.
+In scripts 02 and 03, replace =/path/to/workbench= with the local Connectome
+Workbench installation path. These explicit paths replace the original automatic
+selection between the author's old Mac and cluster directories.
+
+Run from the repository root, or run the scripts interactively in R:
+
+#+begin_src sh
+Rscript 20260313_BayesfMRI2/scripts/01_convert_1st_level_results.R
+Rscript 20260313_BayesfMRI2/scripts/02_group_level_analysis.R
+Rscript 20260313_BayesfMRI2/scripts/03_group_level_plots.R
+#+end_src
+
+Script 01 skips existing =bglm.rds= files and retains the supplied =.Rdata= files.
+If conversion has already been completed, start at script 02. To plot an existing
+main result without fitting again, run script 03 alone.
+Scripts 02 and 03 write to the external directory and replace same-name outputs
+when rerun. They are not executed as part of this repository cleanup.
+
+* External inputs
+
+Paths below are relative to =data_path=:
+
+| Input | Description |
+|-------+-------------|
+| 20251123_1stlevel/sub-NMD*/02_BayesfMRI/bglm.Rdata | Supplied first-level model containing an object named bglm |
+| 20251123_1stlevel/sub-NMD*/02_BayesfMRI/bglm.rds | Converted first-level model read by the group analysis |
+| design_matrix.csv | Header plus 40 participant rows in the archived analysis |
+| contrast_matrix.csv | Five rows and five columns, without a header |
+
+Supplied =activation.Rdata= files are not read by this workflow.
+
+The design columns must be ordered as =record_id, group_CTR, group_DEP, age, sex,
+upgrade=. IDs use the form =NMD001=. The script sorts model files by subject
+number, verifies that their IDs exactly match the design row order, then removes
+=record_id=. It does not reorder or filter design rows automatically.
+
+=group_CTR= and =group_DEP= are group indicators; age is in years; sex is coded
+0 = female and 1 = male; upgrade is coded 0 = old scanner software and 1 = new.
+Both group indicators are passed without an additional intercept. Covariates are
+not centered or rescaled in this script. Scanner software is adjusted as a
+covariate; this workflow does not perform scanner harmonization.
+
+The expected contrast matrix is documented here; the actual CSV remains external:
+
+| Contrast | group_CTR | group_DEP | age | sex | upgrade | Excursion type |
+|----------+-----------+-----------+-----+-----+---------+----------------|
+| CTR > DEP | 1 | -1 | 0 | 0 | 0 | > |
+| DEP > CTR | -1 | 1 | 0 | 0 | 0 | > |
+| CTR average | 1 | 0 | 0 | 0 | 0 | != |
+| DEP average | 0 | 1 | 0 | 0 | 0 | != |
+| CTR and DEP average | 0.5 | 0.5 | 0 | 0 | 0 | != |
+
+The historical contrast names are retained. The contrasts named "average" select
+group coefficients at zero-valued covariates, rather than raw sample means.
+The combined contrast weights the two groups equally. Interpretation should take
+the uncentered age covariate into account.
+
+* Model settings and software
+
+The main =BayesGLM2()= call is preserved: =gamma = 0=, =alpha = 0.05=, and
+=alpha_nested = c(0.05, 0.01)=. With nested activation enabled, the package ignores
+=alpha=. Both nested levels are saved; the original activation and masked-effect
+plots select level 1. Sampling counts remain package defaults, as in the original
+script. The saved historical model records =nsamp_theta = 50= and =nsamp_beta = 100=.
+
+The historical =bglm2_runinfo.rds= records R 4.4.1, BayesfMRI 0.14.0,
+INLA 24.12.11, and ciftiTools 0.19.0. The scripts also require peakRAM for fitting
+and Connectome Workbench for CIFTI operations. These versions are provenance,
+not an automatically installed or locked environment; other package versions may
+change defaults or behavior. The saved fit took approximately 13.9 hours.
+
+The original run-info field names, including =test_subjects= and =test_files=,
+are retained for compatibility; they contain the full analysis sample.
+=COMPUTER= now records the hostname instead of the old RED/MPro label.
+
+* External outputs
+
+| Output | Description |
+|--------+-------------|
+| results/bglm2.rds | Group contrasts, nested activations, masks, and model results |
+| results/bglm2_runinfo.rds | Package versions, input files, timing, and memory measurements |
+| plots/bglm2_plots/ | Figures grouped by contrast and surface template |
+
+Plotting retains inflated and very inflated surfaces, surface and volume views,
+and three statistics: contrast, nested activations, and activation-masked contrast.
+Color limits remain -0.5 to 0.5 for group differences and -1 to 1 for contrasts
+named "average". Output names are preserved to match the original workflow.
+
+* Changes made during organization
+
+Scripts were numbered and moved into =scripts/= to match the repository layout.
+The conversion block was extracted into a standalone script. Comments and layout
+were simplified, explicit external paths replaced machine detection, and checks
+were added for missing inputs, duplicate IDs, design order, and matrix dimensions.
+The results directory is created if needed. Model arguments, contrasts read from
+the external CSV, subject sorting, plotting calls, and output filenames are
+otherwise preserved. No fitting, conversion, or figure generation was rerun.

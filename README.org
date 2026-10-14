@@ -1,3 +1,9 @@
 #+TITLE: Processing and Analysis of Neuro-Motor Depression task-fMRI Data
 
 Processing of the Neuro Motor Depression study sample to identify differences in primary motor cortex activation during a hand clench task between individuals with depression and those never diagnosed with depression.
+
+* Group-level analysis
+
+See [[file:20260313_BayesfMRI2/01_Bayes_fMRI_Group_Analysis.org][NMD group-level analysis with BayesfMRI]] for first-level model conversion,
+group model fitting, and plotting. This directory contains code and documentation
+only; input data and generated results remain in external storage.
