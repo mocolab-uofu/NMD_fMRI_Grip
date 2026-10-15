@@ -21,11 +21,11 @@ small-sample tests, and individual-level plotting are not included.
 
 * Scripts and execution order
 
-| Script | Original source | Purpose |
-|--------+-----------------+---------|
+| Script                         | Original source                            | Purpose                                |
+|--------------------------------+--------------------------------------------+----------------------------------------|
 | [[file:scripts/01_convert_1st_level_results.R][01_convert_1st_level_results.R]] | Commented conversion block in code/bglm2.R | Convert first-level model objects once |
-| [[file:scripts/02_group_level_analysis.R][02_group_level_analysis.R]] | code/bglm2.R | Fit and save the main group model |
-| [[file:scripts/03_group_level_plots.R][03_group_level_plots.R]] | code/bglm2_plot.R | Plot the saved group results |
+| [[file:scripts/02_group_level_analysis.R][02_group_level_analysis.R]]      | code/bglm2.R                               | Fit and save the main group model      |
+| [[file:scripts/03_group_level_plots.R][03_group_level_plots.R]]         | code/bglm2_plot.R                          | Plot the saved group results           |
 
 Set =data_path= near the top of each script to the external analysis directory.
 In scripts 02 and 03, replace =/path/to/workbench= with the local Connectome
@@ -50,12 +50,12 @@ when rerun. They are not executed as part of this repository cleanup.
 
 Paths below are relative to =data_path=:
 
-| Input | Description |
-|-------+-------------|
+| Input                                              | Description                                                |
+|----------------------------------------------------+------------------------------------------------------------|
 | 20251123_1stlevel/sub-NMD*/02_BayesfMRI/bglm.Rdata | Supplied first-level model containing an object named bglm |
-| 20251123_1stlevel/sub-NMD*/02_BayesfMRI/bglm.rds | Converted first-level model read by the group analysis |
-| design_matrix.csv | Header plus 40 participant rows in the archived analysis |
-| contrast_matrix.csv | Five rows and five columns, without a header |
+| 20251123_1stlevel/sub-NMD*/02_BayesfMRI/bglm.rds   | Converted first-level model read by the group analysis     |
+| design_matrix.csv                                  | Header plus 40 participant rows in the archived analysis   |
+| contrast_matrix.csv                                | Five rows and five columns, without a header               |
 
 Supplied =activation.Rdata= files are not read by this workflow.
 
@@ -72,13 +72,13 @@ covariate; this workflow does not perform scanner harmonization.
 
 The expected contrast matrix is documented here; the actual CSV remains external:
 
-| Contrast | group_CTR | group_DEP | age | sex | upgrade | Excursion type |
-|----------+-----------+-----------+-----+-----+---------+----------------|
-| CTR > DEP | 1 | -1 | 0 | 0 | 0 | > |
-| DEP > CTR | -1 | 1 | 0 | 0 | 0 | > |
-| CTR average | 1 | 0 | 0 | 0 | 0 | != |
-| DEP average | 0 | 1 | 0 | 0 | 0 | != |
-| CTR and DEP average | 0.5 | 0.5 | 0 | 0 | 0 | != |
+| Contrast            | group_CTR | group_DEP | age | sex | upgrade | Excursion type |
+|---------------------+-----------+-----------+-----+-----+---------+----------------|
+| CTR > DEP           |         1 |        -1 |   0 |   0 |       0 | >              |
+| DEP > CTR           |        -1 |         1 |   0 |   0 |       0 | >              |
+| CTR average         |         1 |         0 |   0 |   0 |       0 | !=             |
+| DEP average         |         0 |         1 |   0 |   0 |       0 | !=             |
+| CTR and DEP average |       0.5 |       0.5 |   0 |   0 |       0 | !=             |
 
 The historical contrast names are retained. The contrasts named "average" select
 group coefficients at zero-valued covariates, rather than raw sample means.
@@ -105,11 +105,11 @@ are retained for compatibility; they contain the full analysis sample.
 
 * External outputs
 
-| Output | Description |
-|--------+-------------|
-| results/bglm2.rds | Group contrasts, nested activations, masks, and model results |
+| Output                    | Description                                                    |
+|---------------------------+----------------------------------------------------------------|
+| results/bglm2.rds         | Group contrasts, nested activations, masks, and model results  |
 | results/bglm2_runinfo.rds | Package versions, input files, timing, and memory measurements |
-| plots/bglm2_plots/ | Figures grouped by contrast and surface template |
+| plots/bglm2_plots/        | Figures grouped by contrast and surface template               |
 
 Plotting retains inflated and very inflated surfaces, surface and volume views,
 and three statistics: contrast, nested activations, and activation-masked contrast.
