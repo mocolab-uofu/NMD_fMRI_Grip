@@ -22,13 +22,15 @@ sudo apt-get install -y \
 sudo apt-get install -y libgsl-dev
 #+end_src
 
-* Install BayesfMRI
+* Install BayesfMRI via CRAN
 This took about 5 minutes.
 #+begin_src R
 ## * Install packages
 # sf and excursions are prerquisites for BayesfMRI
 install.packages(c("sf", "excursions", "BayesfMRI", "hrf"))
 #+end_src
+
+Note that for the BayesGLM2 (the second level), we need version 12. While writing this, version 11 is on CRAN, so with the above method, you won't get the version 12, but version 11. Should be fine for the first level analysis though.
 
 * Install INLA
 #+begin_src R
@@ -43,15 +45,63 @@ install.packages("INLA",
 INLA::inla.binary.install()
 #+end_src
 
+Note, I installed these again on 2026-10-05. When I installed the binaries I was asked to select a version for Ubuntu 22 or 25. I picked 22:
+
+#+begin_example
+,* installing *binary* package ‘INLA’ ...
+,* DONE (INLA)
+
+The downloaded source packages are in
+	‘/tmp/RtmpYv4i7f/downloaded_packages’
+> INLA::inla.binary.install()
+,* Looking for Version_25.10.19 and os='<choose interactively>'
+  Available alternatives:
+  	 Alternative 1  is  ./CentOS Linux-7 (Core)/Version_25.10.19/64bit.tgz
+  	 Alternative 2  is  ./Fedora Linux-43 (Workstation Edition)/Version_25.10.19/64bit.tgz
+  	 Alternative 3  is  ./Rocky Linux-10.0 (Red Quartz)/Version_25.10.19/64bit.tgz
+  	 Alternative 4  is  ./Rocky Linux-8.10 (Green Obsidian)/Version_25.10.19/64bit.tgz
+  	 Alternative 5  is  ./Rocky Linux-9.6 (Blue Onyx)/Version_25.10.19/64bit.tgz
+  	 Alternative 6  is  ./Ubuntu-22.04.5 LTS (Jammy Jellyfish)/Version_25.10.19/64bit.tgz
+  	 Alternative 7  is  ./Ubuntu-25.04 (Plucky Puffin)/Version_25.10.19/64bit.tgz
+  Chose alternative [1:7]
+	1: 6
+,* Install file [https://inla.r-inla-download.org/Linux-builds/./Ubuntu-22.04.5 LTS (Jammy Jellyfish)/Version_25.10.19/64bit.tgz]
+,* INLA is installed in [/home/vincent/Software/R/library/INLA]
+,* Checking for write access...
+,* Download file, please wait...
+,* md5-checksum [3459b80e0d7d30d8fa598803159cc05a] OK.
+,* Rename old 64bit directory...
+,* Unpack file...
+,* Remove temporary file...
+,* Remove old 64bit directory...
+,* Done!
+#+end_example
+
 * Check installation
-#+begin_src R
+#+begin_src R :results output drawer
 ## * Load Libraries
 library("ciftiTools")
 library("BayesfMRI")
 library("INLA")
 
+
 ## * Set Workbench installation location for ciftiTools
 ciftiTools.setOption(
   "wb_path","~/Software/workbench/2.1.0/bin_linux64"
 )
+
+## * Print versions
+date()
+packageVersion("ciftiTools")
+packageVersion("BayesfMRI")
+packageVersion("INLA")
 #+end_src
+
+#+RESULTS:
+:results:
+Using this Workbench path: '/home/vincent/Software/workbench/2.1.0/bin_linux64/wb_command'.
+[1] "Mon Oct  5 16:00:01 2026"
+[1] ‘0.21.1’
+[1] ‘0.11.0’
+[1] ‘26.8.7’
+:end:
