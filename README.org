@@ -5,5 +5,15 @@ Processing of the Neuro Motor Depression study sample to identify differences in
 * Group-level analysis
 
 See [[file:20260313_BayesfMRI2/01_Bayes_fMRI_Group_Analysis.org][NMD group-level analysis with BayesfMRI]] for first-level model conversion,
-group model fitting, and plotting. This directory contains code and documentation
-only; input data and generated results remain in external storage.
+group model fitting, and plotting. Analysis code, submission scripts, and
+documentation are kept in Git; input data and generated results remain in shared
+project storage. Analysis documents record the required software versions and
+runtime paths.
+
+See [[file:20260313_BayesfMRI2/02_Bayes_fMRI_Area_Filtering.org][BayesfMRI 0.15.0 area-filtered group analysis]] for the full 40-participant
+rerun with shared posterior samples, minimum areas 20/30/40, and paired R/Slurm
+scripts 04 (analysis) and 05 (plots).
+Results are reviewed directly through the mounted Projects share at
+=/Volumes/afmejia/Projects/brain_stimulation_utah/20261025_BayesfMRI_AreaFiltering/full/group_area_20_30_40/=.
+The shared directory contains =results/=, =posterior_samples/=,
+=analysis_records/=, =plots/= and =tables/=; plotting updates =plots/= by default.

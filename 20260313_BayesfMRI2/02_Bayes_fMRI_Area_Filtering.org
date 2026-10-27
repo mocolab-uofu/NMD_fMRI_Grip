@@ -1,0 +1,287 @@
+#+TITLE: NMD Group Analysis With BayesfMRI 0.15.0 Area Filtering
+
+* Purpose and analysis settings
+
+Rerun the full group model for 40 participants (22 CTR, 18 DEP) using the
+collaborators' first-level models previously converted to RDS by Yunong.
+Run the formal analysis directly, as requested; there is no pilot mode or
+separate validation job. Ordinary input and completion checks are part of the
+formal scripts. Historical scripts 01-03 and their results remain available.
+
+| Setting | Value |
+|---------+-------|
+| BayesfMRI | 0.15.0, upstream commit 6f5b08fa498fe87af1f77a72acc63d28645ab198 |
+| R / INLA / ciftiTools | 4.4.1 / 24.12.11 / 0.19.0 |
+| Minimum areas | 20, 30, 40 squared model-coordinate units |
+| gamma / alpha / alpha_nested | 0 / 0.05 / NULL |
+| nsamp_theta / nsamp_beta | 50 / 100 |
+| New run seed | 20261025 |
+| Sampling workers | 4; one INLA/BLAS/OpenMP thread per worker |
+
+Retain the existing five-column design without an additional intercept:
+=group_CTR, group_DEP, age, sex, upgrade=. Do not center or scale covariates.
+Retain all five rows of the existing contrast matrix and excursion types
+=>, >, !=, !=, !==. The historical "average" names refer to group coefficients
+at zero-valued covariates; they are not raw sample averages.
+
+The new single-alpha mode replaces the old nested alpha 0.05/0.01 call for this
+run only. The package's area procedure uses a common weighted ordering and
+recomputes the joint set as small components are excluded. It is not simply a
+post-hoc deletion of clusters in an old activation map, and its sets need not
+be nested across area thresholds. Opposite directions form separate clusters.
+Keep the pinned package's inference and theta-weighting implementation intact.
+
+Areas are sums of lumped FEM vertex areas on the reference first-level model
+mesh. Do not describe them as anatomical mm^2 without establishing the mesh
+coordinates and surface provenance. The inflated/very-inflated GIFTI files
+below are display surfaces, not replacement geometries for the area calculation.
+
+* Paired scripts and persistent paths
+
+| Step | R script | Slurm script |
+|------+----------+--------------|
+| 04: fit and filter | [[file:scripts/04_group_level_area_analysis.R][04_group_level_area_analysis.R]] | [[file:scripts/04_group_level_area_analysis.slurm][04_group_level_area_analysis.slurm]] |
+| 05: export figures | [[file:scripts/05_group_level_area_plots.R][05_group_level_area_plots.R]] | [[file:scripts/05_group_level_area_plots.slurm][05_group_level_area_plots.slurm]] |
+
+Local editing directory:
+#+begin_example
+/Users/ywu226/Documents/GitHub/NMD_fMRI_Grip
+#+end_example
+
+Use an immutable checkout at =/home/ywu226/code/NMD_fMRI_Grip/<COMMIT>= on Hazel.
+Commit code and documentation as Yunong Wu <yunongwu33@gmail.com>, transfer a
+Git bundle, and verify the remote revision. Do not update a checkout used by a
+queued or running job. AGENTS.md is local and excluded from Git. No GitHub push
+is part of this workflow.
+
+Runtime activation and rendering:
+#+begin_example
+/rs1/researchers/a/afmejia/Software/ywu226/envs/nmd-bayesfmri-0.15.0-20261025/activate.sh
+/rs1/researchers/a/afmejia/Software/ywu226/envs/nmd-bayesfmri-0.15.0-20261025/run_headless_R.sh
+/rs1/researchers/a/afmejia/Software/ywu226/envs/nmd-red-20261022/conda/bin/Rscript
+/home/ywu226/software/workbench/2.0.1/workbench/bin_rh_linux64
+#+end_example
+
+Inputs remain read-only at:
+#+begin_example
+/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/20260313_BayesfMRI2/20251123_1stlevel/sub-NMD<ID>/02_BayesfMRI/bglm.rds
+/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/20260313_BayesfMRI2/design_matrix.csv
+/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/20260313_BayesfMRI2/contrast_matrix.csv
+#+end_example
+
+Expected IDs, in order:
+#+begin_example
+001 002 003 004 005 006 007 009 014 019 022 023 025 026 032 033 035 038 039 040
+043 045 049 050 056 057 060 062 063 064 065 067 068 071 073 076 083 084 086 087
+#+end_example
+
+Display surfaces:
+#+begin_example
+/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/surface_models/S1200.L.inflated_MSMAll.10k_fs_LR.surf.gii
+/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/surface_models/S1200.R.inflated_MSMAll.10k_fs_LR.surf.gii
+/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/surface_models/S1200.L.very_inflated_MSMAll.10k_fs_LR.surf.gii
+/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/surface_models/S1200.R.very_inflated_MSMAll.10k_fs_LR.surf.gii
+#+end_example
+
+The volume background is ciftiTools' installed
+=extdata/MNI152_T1_2mm_crop.nii.gz=, so plotting requires no compute-node download.
+
+* Submit the formal analysis and dependent plotting
+
+| Job | Account / partition / QoS | CPUs | Memory | Wall limit |
+|-----+---------------------------+------+--------+------------|
+| Analysis | statmind_cpu / compute / normal | 4 | 96 GB | 48 hours |
+| Plots | statmind_cpu / compute / normal | 1 | 8 GB | 4 hours |
+
+The existing analysis and title-corrected plots are complete. Directory
+organization does not require submitting either script. The commands below
+are execution instructions for a separately authorized analysis or replot.
+
+On a login node, replace the checkout suffix below with the committed revision.
+The output root and logs directory must exist before submitting because Slurm
+opens its log files before the script executes. Submit each command once and
+retain the returned job IDs immediately.
+
+#+begin_src bash
+NMD_CODE=/home/ywu226/code/NMD_fMRI_Grip/<COMMIT>
+NMD_OUTPUT=/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/20261025_BayesfMRI_AreaFiltering
+mkdir -p "$NMD_OUTPUT/logs" "$NMD_OUTPUT/full"
+NMD_FIT_JOB=$(sbatch --parsable "$NMD_CODE/20260313_BayesfMRI2/scripts/04_group_level_area_analysis.slurm" "$NMD_CODE")
+NMD_FIT_JOB=${NMD_FIT_JOB%%;*}
+printf '%s\n' "$NMD_FIT_JOB" > "$NMD_OUTPUT/logs/analysis-job-$NMD_FIT_JOB.id"
+NMD_RUN_DIR="$NMD_OUTPUT/full/group_area_20_30_40"
+NMD_PLOT_JOB=$(sbatch --parsable --dependency="afterok:$NMD_FIT_JOB" --kill-on-invalid-dep=yes "$NMD_CODE/20260313_BayesfMRI2/scripts/05_group_level_area_plots.slurm" "$NMD_CODE" "$NMD_RUN_DIR")
+NMD_PLOT_JOB=${NMD_PLOT_JOB%%;*}
+printf '%s\n' "$NMD_PLOT_JOB" > "$NMD_OUTPUT/logs/plots-job-$NMD_PLOT_JOB.id"
+printf 'Analysis: %s\nPlots: %s\nRun directory: %s\n' "$NMD_FIT_JOB" "$NMD_PLOT_JOB" "$NMD_RUN_DIR"
+#+end_src
+
+Do not run the analysis R script on the login node. The Slurm wrapper sets
+=NMD_RUN_DIR= and =NMD_CODE_COMMIT= and archives the actual submitted scripts.
+It creates a job-private R profile to set INLA's worker threads to 1:1; INLA's
+default can otherwise exceed the allocation despite OMP_NUM_THREADS=1.
+This changes no global shell or R startup files. Scratch contains only temporary
+working files, under =/share/statmind/ywu226/nmd-area-{analysis,plots}/job-JOBID/=.
+
+* Samples, checkpoints, and result objects
+
+The formal run directory is named for its analysis, with Slurm IDs retained in
+records and logs:
+#+begin_example
+/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/20261025_BayesfMRI_AreaFiltering/full/group_area_20_30_40/
+#+end_example
+
+All paths in the following table are relative to that directory:
+
+| Output | Contents |
+|--------+----------|
+| results/bglm2_area_20.rds | Complete BayesGLM2 fit and first area threshold; checkpoint |
+| results/bglm2_area_30.rds | Same posterior and coefficients, independently filtered at 30 |
+| results/bglm2_area_40.rds | Same posterior and coefficients, independently filtered at 40 |
+| results/bglm2_runinfo.rds | Inputs, matrices, versions, seed, timing, memory, code and job IDs |
+| analysis_records/refilter_manifest_area_{30,40}.rds | Derived thresholds, original source call, refilter provenance and diagnostics |
+| posterior_samples/BayesGLM2-<GENERATED>/manifest.rds | Original completed area-20 sampling manifest |
+| posterior_samples/BayesGLM2-<GENERATED>/model-<MODEL>/theta-<GENERATED>/batch.rds | Theta batch and subject sampling seeds |
+| posterior_samples/BayesGLM2-<GENERATED>/model-<MODEL>/theta-<GENERATED>/contrast-{0001,...,0005}.rds | Saved cortical contrast samples |
+| analysis_records/input_manifest.csv | All 40 model paths, file sizes and modification times |
+| analysis_records/sample_checksums.csv | Checksums of the 500 saved cortical sample matrices |
+| analysis_records/mesh_summary.csv | Reference subject, mesh dimensions and vertex areas |
+| analysis_records/session_info.txt | Analysis R session |
+| analysis_records/run_checks.txt | Formal model completion checks |
+| analysis_records/{analysis,plots}-job-JOBID/ | Submitted scripts, revision, Slurm job description; analysis worker profile |
+| tables/area_summary.csv | 30 hemisphere/contrast/threshold summaries |
+| tables/cluster_summary.csv | Signed cluster vertex counts and areas; may have zero rows |
+| run_record.org | Append-only job and stage completion record |
+
+The two refilter manifests retain the original sample source, mesh, weights,
+threshold-specific diagnostics and filtering provenance. Keep them in
+=analysis_records/=; the area-30/40 model objects refer to these files.
+The =BayesGLM2-<GENERATED>= suffix is an automatic unique directory name from
+R's =tempfile()=, not an analysis parameter or Slurm ID. All files remain on
+persistent project storage despite the function's name.
+
+The public package accepts one area threshold per call. Script 04 therefore
+calls BayesGLM2 once with area 20 and a persistent sample directory, saves the
+complete object, then invokes =BayesfMRI:::excursions.mc.no.spurious= for 30 and
+40. Each call uses the original valid mask, reference mesh, theta weights and
+sample paths. The internal API is tied to the pinned source revision. Update
+the cortical PPM, activation, filter diagnostics and CIFTI data together; retain
+the original manifest and give each derived object its own manifest path.
+
+Completion checks establish that coefficients and voxel results are identical
+across the three objects, CIFTI data match the masked mesh activations, all final
+signed clusters meet the threshold, and posterior checksums remain unchanged.
+Empty activation is a valid result. Strict nesting across thresholds is not
+required. These checks use the formal outputs, not a separate analysis run.
+
+If filtering fails after the area-20 checkpoint has been saved, diagnose the
+failure and resubmit script 04 with the original run directory as argument 2.
+It loads that checkpoint and checks input provenance instead of sampling again.
+An interrupted fit with only partial samples is not automatically resumable;
+the script stops rather than silently drawing a second set in the same folder.
+
+The R seed and cortical sampling seeds are recorded. The package's legacy
+voxel sampler does not expose the same explicit seed handling, so this record
+does not imply bitwise reproducibility of the entire mixed model across runs.
+
+* Figures and review through the project share
+
+Filename contrast codes are =CTR_gt_DEP, DEP_gt_CTR, CTR_average, DEP_average,
+CTR_DEP_average=. Display templates are =inflated= and =very_inflated=.
+
+| Relative output path | Count |
+|----------------------+-------|
+| plots/surface/area_{20,30,40}/CONTRAST/TEMPLATE_{activations,activated_contrast}.png | 60 |
+| plots/surface/contrasts/CONTRAST/TEMPLATE_contrasts.png | 10 |
+| plots/comparisons/CONTRAST/TEMPLATE_area_20_30_40.png | 10 |
+| plots/volume/CONTRAST/{contrasts,activations,activated_contrast}.png | 15 |
+| plots/figure_manifest.csv | All 95 main PNGs and separate legends, dimensions and checksums |
+| analysis_records/plot_session_info.txt | Plotting R session |
+| analysis_records/plot_checks.txt | Figure export completion record |
+
+Use =stat="activations"= and =stat="activated_contrast"= in single-alpha mode.
+Group-difference color limits are +/-0.5; the three "average" contrasts use
++/-1. Each comparison assembles the same rendered maps in order 20, 30, 40.
+Empty maps explicitly say that no clusters survive. Voxel supplements clearly
+state that no area filtering was applied and are exported only once.
+
+Surface titles are added with =view_comp= and grid text after rendering the
+brain image without an OpenGL title. This preserves two-line titles because the
+current OpenGL renderer displays newline characters as boxes. Colors, surfaces,
+views and inference are unchanged; the title strip uses 10% of the image height.
+
+To replot a completed analysis, submit only script 05. By default it updates
+=plots/= in the original analysis directory, including the figure manifest.
+It reads the existing three models and checks their checksums before and after
+plotting; it does not fit, sample or refilter. Argument 3 is an optional explicit
+output directory, used only when a separate destination is requested.
+Completion records are saved in =analysis_records/= and copied to the plotting
+job's record directory. The figure manifest distinguishes the plotting revision
+from the original analysis revision. Do not create extra fix/replot versions
+unless explicitly requested.
+
+#+begin_src bash
+NMD_RUN_DIR="$NMD_OUTPUT/full/group_area_20_30_40"
+sbatch --parsable "$NMD_CODE/20260313_BayesfMRI2/scripts/05_group_level_area_plots.slurm" "$NMD_CODE" "$NMD_RUN_DIR"
+#+end_src
+
+The current figures were generated by title-correction job 1571150, using
+analysis job 1558105's saved models. Review =plots/comparisons/=,
+=plots/figure_manifest.csv= and =run_record.org= in the same analysis directory.
+
+Logs are under the output root's =logs/= directory:
+={analysis,plots}-JOBID.out=, ={analysis,plots}-JOBID.err=, and
+=accounting-JOBID.txt=. Check sacct state and exit code, not just file existence
+or the site's job footer. Inspect comparison PNGs after completion.
+
+All data and generated results remain under the group's project-storage root:
+#+begin_example
+/rs1/researchers/a/afmejia/Projects/
+#+end_example
+
+The user reviews this storage through the Mac's network mount. The mapping
+verified after reconnection on 2026-10-27 is:
+#+begin_example
+/Volumes/afmejia/Projects/
+#+end_example
+
+The mounted share is =smb://rs.oit.ncsu.edu/rs1/researchers/a/afmejia=.
+Check the live mount point before opening files; the share was disconnected
+earlier that day and mounted with a different volume name on reconnection.
+The updated comparisons are under:
+#+begin_example
+/Volumes/afmejia/Projects/brain_stimulation_utah/20261025_BayesfMRI_AreaFiltering/full/group_area_20_30_40/plots/comparisons/
+#+end_example
+
+As clarified on 2026-10-27, do not download further result copies to the Mac's
+=Documents= directory. Earlier local deliveries are historical copies; the
+persistent project directories hold the originals. Keep generated results
+outside Git.
+
+* Directory organization and provenance
+
+The shared run uses =full/group_area_20_30_40/= with =analysis_records/=,
+=posterior_samples/=, =results/=, =plots/= and =tables/=. The previous
+=full/job-1558105/= run and its title-correction replot are consolidated here.
+Only the corrected 95 main PNGs and 30 legends remain in =plots/=.
+
+The organization operation updates active paths in model objects, manifests,
+run information and CSV inventories. It preserves numerical results, posterior
+sample bytes and corrected image bytes; no fitting or plotting is required.
+RDS file checksums change when stored paths change. Current model checksums and
+the before/after migration checksums are stored in =analysis_records/=;
+pre-migration plotting checksums remain with the historical plot-job records.
+Historical logs, submitted code snapshots and original calls retain their
+original text. The combined =run_record.org= records the path mapping and the
+analysis and plot jobs that actually generated the results.
+
+The one-time maintenance script
+[[file:scripts/06_organize_area_outputs.R][06_organize_area_outputs.R]] performs this migration on Hazel using the
+existing environment and =NMD_CODE_COMMIT=. It checks that no user jobs are
+queued or running, stages path-only RDS replacements, compares all numerical
+contents, and reads checksums for the 500 posterior files and corrected figures.
+Temporary recovery copies remain on Projects until final checks pass and are
+then removed. It stops if the destination or a partial migration already exists;
+inspect that state before any retry. It does not submit a Slurm job or invoke
+analysis, filtering or rendering functions. Completed results require no further
+execution of this maintenance script.
