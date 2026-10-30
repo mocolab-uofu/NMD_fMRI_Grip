@@ -51,8 +51,9 @@ Local editing directory:
 Use an immutable checkout at =/home/ywu226/code/NMD_fMRI_Grip/<COMMIT>= on Hazel.
 Commit code and documentation as Yunong Wu <yunongwu33@gmail.com>, transfer a
 Git bundle, and verify the remote revision. Do not update a checkout used by a
-queued or running job. AGENTS.md is local and excluded from Git. No GitHub push
-is part of this workflow.
+queued or running job. AGENTS.md is local and excluded from Git. Analysis
+submission does not publish results; the selected completed results are
+published separately as described below.
 
 Runtime activation and rendering:
 #+begin_example
@@ -234,7 +235,8 @@ Logs are under the output root's =logs/= directory:
 =accounting-JOBID.txt=. Check sacct state and exit code, not just file existence
 or the site's job footer. Inspect comparison PNGs after completion.
 
-All data and generated results remain under the group's project-storage root:
+Authoritative inputs and complete analysis outputs remain under the group's
+project-storage root:
 #+begin_example
 /rs1/researchers/a/afmejia/Projects/
 #+end_example
@@ -253,10 +255,45 @@ The updated comparisons are under:
 /Volumes/afmejia/Projects/brain_stimulation_utah/20261025_BayesfMRI_AreaFiltering/full/group_area_20_30_40/plots/comparisons/
 #+end_example
 
-As clarified on 2026-10-27, do not download further result copies to the Mac's
-=Documents= directory. Earlier local deliveries are historical copies; the
-persistent project directories hold the originals. Keep generated results
-outside Git.
+Projects remains the authoritative result location. The selected GitHub
+publication below is an explicit exception allowing copies in the local Git
+checkout. Other results remain on shared storage; earlier local deliveries are
+historical copies.
+
+* Selected GitHub publication
+
+The repository's [[file:../20261025_BayesfMRI_AreaFiltering/][20261025_BayesfMRI_AreaFiltering/]] directory publishes 131 files
+(about 53.55 MiB) copied from the completed shared run on 2026-10-30:
+
+| Relative path | Contents |
+|---------------+----------|
+| plots/ | 125 PNGs (95 main figures and 30 legends) plus figure_manifest.csv |
+| tables/ | area_summary.csv (30 rows) and cluster_summary.csv (998 rows) |
+| results/ | bglm2_area_20.rds, bglm2_area_30.rds, and bglm2_area_40.rds |
+
+All 130 images, tables, and models are byte-identical to the shared originals.
+Only the published figure manifest's =path= values are changed, to paths
+relative to the published result directory. Its image checksums, dimensions,
+parameters, generating revisions, and job identifiers are unchanged. The
+shared manifest is unchanged. No analysis, sampling, refiltering, or plotting
+was performed for this publication.
+
+The original generating revisions remain:
+
+| Stage | Job | Code revision |
+|-------+-----+---------------|
+| Analysis | 1558105 | 770122ff9c021c2d401a0c732253d4aad5024c4b |
+| Corrected figures | 1571150 | 5034c3172b1050063fbc603ec6f9e4edc25244c1 |
+| Shared-directory migration | Not a Slurm job | 2e19147a7663e2ab6953fd33aae0f3778e2570a1 |
+
+The publication supports browsing figures and tables and loading the group
+models with =readRDS()=. Model bytes, including their HPC absolute references,
+are preserved. This subset omits =bglm2_runinfo.rds=, posterior samples,
+analysis records (including the refilter manifests), logs, and Finder metadata.
+Script 05 still needs the shared run information, display surfaces, and its
+documented rendering environment. Refiltering requires the original posterior
+samples and manifests on Projects. Access those dependencies through the
+documented shared paths; the publication is not a self-contained rerun bundle.
 
 * Directory organization and provenance
 

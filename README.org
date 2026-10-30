@@ -5,10 +5,10 @@ Processing of the Neuro Motor Depression study sample to identify differences in
 * Group-level analysis
 
 See [[file:20260313_BayesfMRI2/01_Bayes_fMRI_Group_Analysis.org][NMD group-level analysis with BayesfMRI]] for first-level model conversion,
-group model fitting, and plotting. Analysis code, submission scripts, and
-documentation are kept in Git; input data and generated results remain in shared
-project storage. Analysis documents record the required software versions and
-runtime paths.
+group model fitting, and plotting. Analysis code, submission scripts,
+documentation, and selected group results are kept in Git. Input data and the
+complete analysis outputs remain in shared project storage. Analysis documents
+record the required software versions and runtime paths.
 
 See [[file:20260313_BayesfMRI2/02_Bayes_fMRI_Area_Filtering.org][BayesfMRI 0.15.0 area-filtered group analysis]] for the full 40-participant
 rerun with shared posterior samples, minimum areas 20/30/40, and paired R/Slurm
@@ -17,3 +17,26 @@ Results are reviewed directly through the mounted Projects share at
 =/Volumes/afmejia/Projects/brain_stimulation_utah/20261025_BayesfMRI_AreaFiltering/full/group_area_20_30_40/=.
 The shared directory contains =results/=, =posterior_samples/=,
 =analysis_records/=, =plots/= and =tables/=; plotting updates =plots/= by default.
+
+* Published area-filtering results
+
+[[file:20261025_BayesfMRI_AreaFiltering/][Selected results]] from the completed 40-participant analysis contain 131 files
+(about 53.55 MiB), with area thresholds 20, 30, and 40:
+
+| Directory | Contents |
+|-----------+----------|
+| [[file:20261025_BayesfMRI_AreaFiltering/plots/][plots/]] | 95 main PNGs, 30 legends, and figure_manifest.csv |
+| [[file:20261025_BayesfMRI_AreaFiltering/tables/][tables/]] | area_summary.csv (30 rows) and cluster_summary.csv (998 rows) |
+| [[file:20261025_BayesfMRI_AreaFiltering/results/][results/]] | bglm2_area_20.rds, bglm2_area_30.rds, and bglm2_area_40.rds |
+
+Start with the [[file:20261025_BayesfMRI_AreaFiltering/plots/comparisons/][three-area comparison figures]]. Images, tables, and models are
+unchanged copies of the shared originals. Figure-manifest paths are relative
+to =20261025_BayesfMRI_AreaFiltering/=; all other manifest fields are preserved.
+
+This subset supports viewing the figures and tables and reading the group
+models. RDS objects retain their original HPC sample and manifest references.
+The existing plotting script still requires the shared run information and
+display surfaces; refiltering also requires the shared posterior samples and
+manifests. Run information, posterior samples, analysis records, and logs remain
+on Projects and are not included in this publication. See the
+[[file:20260313_BayesfMRI2/02_Bayes_fMRI_Area_Filtering.org][analysis documentation]] for provenance and runtime requirements.
