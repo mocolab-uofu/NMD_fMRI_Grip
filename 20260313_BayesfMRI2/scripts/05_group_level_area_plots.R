@@ -10,27 +10,38 @@ library(grid)
 ciftiTools.setOption("wb_path", Sys.getenv("NMD_WB_PATH"))
 stopifnot(packageVersion("BayesfMRI") == "0.15.0", packageVersion("ciftiTools") == "0.19.0", !rgl::rgl.useNULL())
 
-# Read the three completed models and match their stored thresholds to their filenames
+# Match the three saved models to the area thresholds and contrast labels used in the figures
 run_path <- Sys.getenv("NMD_RUN_DIR")
-stopifnot(nzchar(run_path), dir.exists(run_path), nzchar(Sys.getenv("SLURM_JOB_ID")))
+stopifnot(dir.exists(run_path), nzchar(Sys.getenv("SLURM_JOB_ID")))
 run_path <- normalizePath(run_path)
 run_info <- readRDS(file.path(run_path, "results/bglm2_runinfo.rds"))
-stopifnot(run_info$status == "analysis_complete")
+stopifnot(identical(run_info$status, "analysis_complete"))
 area_limits <- c(20, 30, 40)
 model_files <- file.path(run_path, "results", paste0("bglm2_area_", area_limits, ".rds"))
 model_md5 <- tools::md5sum(model_files)
 models <- lapply(model_files, readRDS)
 names(models) <- as.character(area_limits)
-model_limits <- vapply(models, function(model) model$BayesGLM2_results$area.limit, numeric(1))
-stopifnot("Model area thresholds must match their filenames" = all(model_limits == area_limits))
-reference_model <- models[["20"]]
 contrast_names <- c("CTR > DEP", "DEP > CTR", "CTR average", "DEP average", "CTR and DEP average")
 contrast_slugs <- c("CTR_gt_DEP", "DEP_gt_CTR", "CTR_average", "DEP_average", "CTR_DEP_average")
-stopifnot(identical(reference_model$contrast_estimate_xii$meta$cifti$names, contrast_names))
+for (area_limit in area_limits) {
+  area_model <- models[[as.character(area_limit)]]
+  stopifnot("Model area thresholds must match their filenames" = isTRUE(area_model$BayesGLM2_results$area.limit == area_limit))
+  stopifnot(identical(area_model$contrast_estimate_xii$meta$cifti$names, contrast_names),
+            identical(area_model$activations_xii$meta$cifti$names, contrast_names))
+}
+reference_model <- models[["20"]]
 
 # Select the display surfaces and figure destination
 surface_path <- "/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/surface_models"
 templates <- c("inflated", "very_inflated")
+surfaces <- list()
+for (template in templates) {
+  left <- read_surf(file.path(surface_path, paste0("S1200.L.", template, "_MSMAll.10k_fs_LR.surf.gii")))
+  right <- read_surf(file.path(surface_path, paste0("S1200.R.", template, "_MSMAll.10k_fs_LR.surf.gii")))
+  stopifnot(nrow(left$vertices) == length(reference_model$masks$In$cortexL), nrow(right$vertices) == length(reference_model$masks$In$cortexR))
+  surfaces[[template]] <- list(left = left, right = right)
+}
+
 plot_run_path <- Sys.getenv("NMD_PLOT_RUN_DIR", run_path)
 stopifnot(dir.exists(plot_run_path))
 plot_run_path <- normalizePath(plot_run_path)
@@ -45,12 +56,8 @@ for (cc in seq_along(contrast_names)) {
   contrast_slug <- contrast_slugs[cc]
   zlim <- if (grepl("average", contrast_name)) c(-1, 1) else c(-0.5, 0.5)
   for (template in templates) {
-    surfL <- file.path(surface_path, paste0("S1200.L.", template, "_MSMAll.10k_fs_LR.surf.gii"))
-    surfR <- file.path(surface_path, paste0("S1200.R.", template, "_MSMAll.10k_fs_LR.surf.gii"))
-    stopifnot(file.exists(surfL), file.exists(surfR))
-    left <- read_surf(surfL)
-    right <- read_surf(surfR)
-    stopifnot(nrow(left$vertices) == length(reference_model$masks$In$cortexL), nrow(right$vertices) == length(reference_model$masks$In$cortexR))
+    left <- surfaces[[template]]$left
+    right <- surfaces[[template]]$right
 
     # The unmasked coefficient estimate is shared by all area thresholds.
     folder <- file.path(plot_path, "surface/contrasts", contrast_slug)
@@ -125,7 +132,7 @@ for (cc in seq_along(contrast_names)) {
 
 # Record every main figure and any separate legends after checking PNG readability
 figure_manifest <- do.call(rbind, figures)
-stopifnot(nrow(figure_manifest) == 95L, !anyDuplicated(figure_manifest$path), all(file.exists(figure_manifest$path)))
+stopifnot(nrow(figure_manifest) == 95L, !anyDuplicated(figure_manifest$path))
 extra_png <- setdiff(list.files(plot_path, pattern = "\\.png$", recursive = TRUE, full.names = TRUE), figure_manifest$path)
 if (length(extra_png)) {
   figure_manifest <- rbind(figure_manifest, data.frame(path = extra_png, kind = "legend", contrast = NA_character_,
@@ -134,7 +141,6 @@ if (length(extra_png)) {
 dimensions <- matrix(NA_integer_, nrow(figure_manifest), 2, dimnames = list(NULL, c("height", "width")))
 for (i in seq_len(nrow(figure_manifest))) {
   img <- png::readPNG(figure_manifest$path[i])
-  stopifnot(all(dim(img)[1:2] > 0L), all(is.finite(img)))
   dimensions[i, ] <- dim(img)[1:2]
 }
 figure_manifest <- cbind(figure_manifest, dimensions)

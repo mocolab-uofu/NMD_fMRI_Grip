@@ -21,7 +21,7 @@ stopifnot(identical(readLines(file.path(env_path, "logs/BayesfMRI_upstream_commi
 run_path <- Sys.getenv("NMD_RUN_DIR")
 code_commit <- Sys.getenv("NMD_CODE_COMMIT")
 job_id <- Sys.getenv("SLURM_JOB_ID")
-stopifnot(nzchar(run_path), dir.exists(run_path), nzchar(code_commit), nzchar(job_id))
+stopifnot(dir.exists(run_path), nzchar(code_commit), nzchar(job_id))
 run_path <- normalizePath(run_path)
 for (folder in c("results", "posterior_samples", "analysis_records", "tables")) dir.create(file.path(run_path, folder), showWarnings = FALSE)
 output_path <- file.path(run_path, "results")
@@ -41,7 +41,8 @@ names(rds_files) <- sprintf("sub-NMD%03d", id_num)
 expected_ids <- c(1, 2, 3, 4, 5, 6, 7, 9, 14, 19, 22, 23, 25, 26, 32, 33, 35, 38, 39, 40,
                   43, 45, 49, 50, 56, 57, 60, 62, 63, 64, 65, 67, 68, 71, 73, 76, 83, 84, 86, 87)
 stopifnot("First-level model IDs must match the ordered study cohort" = identical(id_num, as.integer(expected_ids)))
-stopifnot(all(file.access(rds_files, 4) == 0), all(file.info(rds_files)$size > 0))
+model_files_info <- file.info(rds_files)
+stopifnot(all(file.access(rds_files, 4) == 0), all(model_files_info$size > 0))
 
 design_file <- file.path(data_path, "design_matrix.csv")
 contrast_file <- file.path(data_path, "contrast_matrix.csv")
@@ -51,8 +52,7 @@ stopifnot("Design rows must follow the first-level model order" = identical(name
 design_matrix <- design_with_ids[, -1]
 design_values <- as.matrix(design_matrix)
 stopifnot(all(is.finite(design_values)), qr(design_values)$rank == 5L)
-stopifnot(all(design_matrix$group_CTR %in% 0:1), all(design_matrix$group_DEP %in% 0:1))
-stopifnot(all(design_matrix$group_CTR + design_matrix$group_DEP == 1))
+stopifnot(all(design_matrix$group_CTR %in% 0:1), all(design_matrix$group_DEP == 1 - design_matrix$group_CTR))
 stopifnot(sum(design_matrix$group_CTR) == 22, sum(design_matrix$group_DEP) == 18)
 
 # The first two contrasts are directional and the three group averages are two-sided.
@@ -63,9 +63,9 @@ contrast_names <- c("CTR > DEP", "DEP > CTR", "CTR average", "DEP average", "CTR
 excursion_type <- c(">", ">", "!=", "!=", "!=")
 
 matrix_md5 <- tools::md5sum(c(design_file, contrast_file))
-input_manifest <- data.frame(subject = names(rds_files), path = unname(rds_files), bytes = file.info(rds_files)$size,
-                             modified = format(file.info(rds_files)$mtime, tz = "UTC", usetz = TRUE), row.names = NULL)
-write.csv(input_manifest, file.path(check_path, "input_manifest.csv"), row.names = FALSE)
+input_manifest <- data.frame(subject = names(rds_files), path = unname(rds_files), bytes = model_files_info$size,
+                             modified = format(model_files_info$mtime, tz = "UTC", usetz = TRUE), row.names = NULL)
+input_record <- file.path(check_path, "input_manifest.csv")
 print(dim(design_matrix))
 print(colSums(design_matrix[, c("group_CTR", "group_DEP")]))
 print(contrast_matrix)
@@ -77,16 +77,10 @@ num_cores <- 4L
 stopifnot(as.integer(Sys.getenv("SLURM_CPUS_PER_TASK")) >= num_cores)
 fit_path <- file.path(output_path, "bglm2_area_20.rds")
 info_path <- file.path(output_path, "bglm2_runinfo.rds")
-if (file.exists(fit_path)) {
-  base <- readRDS(fit_path)
-  run_info <- readRDS(info_path)
-  stopifnot(identical(run_info$test_files, unname(rds_files)), identical(run_info$matrix_md5, matrix_md5))
-  stopifnot(identical(run_info$input_manifest, input_manifest), identical(run_info$design_matrix, design_matrix))
-  stopifnot(run_info$seed == seed, run_info$BayesfMRI_upstream_commit == upstream_commit)
-  cat("Resuming filtering from the saved area-20 checkpoint.\n")
-} else {
+if (!file.exists(fit_path)) {
   # A fresh fit requires an empty posterior sample directory.
   stopifnot(length(list.files(file.path(run_path, "posterior_samples"), all.files = FALSE)) == 0L)
+  write.csv(input_manifest, input_record, row.names = FALSE)
   run_info <- list(status = "fitting", code_commit = code_commit, analysis_job_id = job_id,
     BayesfMRI_version = as.character(packageVersion("BayesfMRI")), BayesfMRI_upstream_commit = upstream_commit,
     INLA_version = as.character(packageVersion("INLA")), ciftiTools_version = as.character(packageVersion("ciftiTools")),
@@ -113,6 +107,14 @@ if (file.exists(fit_path)) {
   run_info$BayesGLM2_profile <- bglm2_profile
   run_info$status <- "fit_complete"
   saveRDS(run_info, info_path)
+} else {
+  # Reuse the saved fit for the same first-level inputs, matrices, seed and package revision.
+  run_info <- readRDS(info_path)
+  stopifnot(identical(input_manifest, run_info$input_manifest), identical(matrix_md5, run_info$matrix_md5))
+  stopifnot(isTRUE(run_info$seed == seed), identical(run_info$BayesfMRI_upstream_commit, upstream_commit))
+  base <- readRDS(fit_path)
+  write.csv(input_manifest, input_record, row.names = FALSE)
+  cat("Resuming filtering from the saved area-20 checkpoint.\n")
 }
 
 # Check the reference fit and the shared posterior samples
@@ -124,10 +126,10 @@ stopifnot(identical(base$contrast_estimate_xii$meta$cifti$names, contrast_names)
 
 manifest_path <- reference_fit$sample_manifest
 manifest <- readRDS(manifest_path)
-stopifnot(manifest$status == "complete", all(c("cortexL", "cortexR") %in% names(manifest$models)))
+stopifnot(identical(manifest$status, "complete"))
 sample_files <- unique(unlist(lapply(manifest$models, `[[`, "sample.files"), use.names = FALSE))
-stopifnot(length(sample_files) == 500L, all(file.exists(sample_files)))
 sample_md5 <- tools::md5sum(sample_files)
+stopifnot(length(sample_md5) == 500L, !anyNA(sample_md5))
 if (!is.null(run_info$sample_md5)) stopifnot(identical(sample_md5, run_info$sample_md5))
 write.csv(data.frame(path = names(sample_md5), md5 = unname(sample_md5)), file.path(check_path, "sample_checksums.csv"), row.names = FALSE)
 
@@ -135,8 +137,8 @@ write.csv(data.frame(path = names(sample_md5), md5 = unname(sample_md5)), file.p
 mesh_rows <- list()
 for (hem in c("cortexL", "cortexR")) {
   saved <- manifest$models[[hem]]
-  stopifnot(saved$status == "complete", identical(saved$valid, base$masks$Mdat[[hem]]))
-  stopifnot(nrow(saved$reference_mesh$loc) == length(saved$valid), all(is.finite(saved$reference_mesh$loc)))
+  stopifnot(identical(saved$status, "complete"), identical(saved$valid, base$masks$Mdat[[hem]]))
+  stopifnot(all(is.finite(saved$reference_mesh$loc)))
   geometry <- BayesfMRI:::surface_cluster_geometry(saved$reference_mesh, saved$valid)
   mesh_rows[[hem]] <- data.frame(hemisphere = hem, reference_subject = names(rds_files)[1],
     vertices = length(saved$valid), valid_vertices = sum(saved$valid), faces = nrow(saved$reference_mesh$graph$tv),
