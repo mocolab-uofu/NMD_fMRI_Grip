@@ -2,7 +2,7 @@
 # Run in R or with Rscript after setting the external data and Workbench paths.
 # Read first-level models and CSV matrices; save the group model and run information externally.
 
-# Step1. Set the environment and external paths
+# Set the environment and external paths
 library(ciftiTools)
 library(INLA)
 library(BayesfMRI)
@@ -17,7 +17,7 @@ result_path <- file.path(data_path, "20251123_1stlevel")
 output_path <- file.path(data_path, "results")
 dir.create(output_path, showWarnings = FALSE, recursive = TRUE)
 
-# Step2. Match first-level models to the design matrix
+# Match first-level models to the design matrix
 rds_files <- list.files(result_path, pattern = "bglm\\.rds$", recursive = TRUE, full.names = TRUE)
 rds_files <- rds_files[grepl("sub-NMD[0-9]+/02_BayesfMRI/bglm\\.rds$", rds_files)]
 id_num <- as.numeric(sub(".*sub-NMD([0-9]+).*", "\\1", rds_files))
@@ -27,7 +27,7 @@ id_num <- id_num[ord]
 names(rds_files) <- sprintf("sub-NMD%03d", id_num)
 
 design_matrix <- read.csv(file.path(data_path, "design_matrix.csv"))
-# Check IDs before removing them; never silently reorder or drop design rows.
+# Each design row must describe the participant at the same position in rds_files.
 stopifnot(length(rds_files) > 0, !anyDuplicated(id_num))
 stopifnot(identical(names(design_matrix), c("record_id", "group_CTR", "group_DEP", "age", "sex", "upgrade")))
 stopifnot(identical(names(rds_files), paste0("sub-", design_matrix$record_id)))
@@ -37,9 +37,9 @@ stopifnot(nrow(contrast_matrix) == 5, ncol(contrast_matrix) == ncol(design_matri
 
 cat("All information loaded successfully.\n")
 
-# Step3. Fit and save the group model
-# Preserve the original model settings. alpha_nested selects nested activation mode;
-# the package ignores alpha in this mode. Sampling counts retain the package defaults.
+# Fit and save the group model
+# In nested mode, alpha_nested sets both activation levels and supersedes alpha.
+# The historical fit uses the package defaults for posterior sampling counts.
 bglm2_profile <- peakRAM({
   bglm2 <- BayesGLM2(
     results = rds_files, design_matrix = design_matrix, contrast_matrix = contrast_matrix,
@@ -52,7 +52,7 @@ bglm2_profile <- peakRAM({
 # Checkpoint: this fit previously took about 13.9 hours; plotting reads this saved object.
 saveRDS(bglm2, file.path(output_path, "bglm2.rds"))
 
-# Step4. Save software versions and resource measurements
+# Save software versions and resource measurements
 # Retain the historical test_subjects/test_files keys; here they describe the full sample.
 run_info <- list(
   BayesfMRI_version = as.character(packageVersion("BayesfMRI")),

@@ -2,7 +2,7 @@
 # Activate the existing R environment and set NMD_CODE_COMMIT to this checkout's revision.
 # Update path metadata only; retain numerical results and the completed job-1571150 figures.
 
-# Establish the exact source, destination and historical evidence
+# Locate the original run and check that it can be moved
 root <- "/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/20261025_BayesfMRI_AreaFiltering"
 old_run <- file.path(root, "full/job-1558105")
 new_run <- file.path(root, "full/group_area_20_30_40")
@@ -16,6 +16,7 @@ started <- format(Sys.time(), tz = "UTC", usetz = TRUE)
 stage <- file.path(old_run, ".layout_migration")
 stopifnot(!file.exists(stage)) # Inspect a previous partial migration before retrying.
 
+# Record the original models, posterior files and tables before moving them
 old_rel <- c(paste0("results/bglm2_area_", c(20, 30, 40), ".rds"), "results/bglm2_runinfo.rds",
              sample_manifest, paste0("results/refilter_manifest_area_", c(30, 40), ".rds"))
 new_rel <- c(old_rel[1:4], sub("^samples/", "posterior_samples/", old_rel[5]),
@@ -32,6 +33,8 @@ stopifnot(length(batch_files) == 100L, all(file.exists(batch_files)))
 batch_md5 <- unname(tools::md5sum(batch_files))
 table_files <- list.files(file.path(old_run, "tables"), full.names = TRUE)
 table_md5 <- unname(tools::md5sum(table_files))
+
+# Match the corrected figures to their manifest and the set of figures they replace
 figures <- read.csv(file.path(old_run, replot, "plots/figure_manifest.csv"), stringsAsFactors = FALSE)
 stopifnot(nrow(figures) == 125L, sum(figures$kind != "legend") == 95L, sum(figures$kind == "legend") == 30L)
 stopifnot(all(figures$plot_job_id == 1571150), all(file.exists(figures$path)))
@@ -125,7 +128,7 @@ mesh <- read.csv(file.path(records, "mesh_summary.csv"), stringsAsFactors = FALS
 mesh$source_manifest <- replace_paths(mesh$source_manifest)
 write.csv(mesh, file.path(records, "mesh_summary.csv"), row.names = FALSE)
 
-# Check every posterior file and all corrected figures at their final locations
+# Verify posterior files, tables and figures at their final locations
 stopifnot(identical(unname(tools::md5sum(samples$path)), samples$md5))
 stopifnot(identical(unname(tools::md5sum(replace_paths(batch_files))), batch_md5))
 stopifnot(identical(unname(tools::md5sum(replace_paths(table_files))), table_md5))
@@ -135,6 +138,8 @@ for (i in seq_len(nrow(figures))) {
   size <- dim(png::readPNG(figures$path[i]))[1:2]
   stopifnot(identical(as.integer(size), as.integer(c(figures$height[i], figures$width[i]))))
 }
+
+# Follow the relocated paths from each model to its posterior samples
 for (i in 1:3) {
   fit <- readRDS(file.path(new_run, new_rel[i]))$BayesGLM2_results
   stopifnot(dir.exists(fit$sample_dir), file.exists(fit$sample_manifest))
@@ -150,6 +155,8 @@ for (i in 1:3) {
     }
   }
 }
+
+# Record which RDS checksums changed when their paths were updated
 after_md5 <- unname(tools::md5sum(file.path(new_run, new_rel)))
 write.csv(data.frame(old_path = file.path(old_run, old_rel), path = file.path(new_run, new_rel),
                     before_md5 = before_md5, after_md5 = after_md5), file.path(records, "migration_checksums.csv"), row.names = FALSE)

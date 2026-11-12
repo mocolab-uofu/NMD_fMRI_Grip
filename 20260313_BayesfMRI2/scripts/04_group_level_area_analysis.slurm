@@ -24,6 +24,8 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM
 NMD_OUTPUT=/rs1/researchers/a/afmejia/Projects/brain_stimulation_utah/20261025_BayesfMRI_AreaFiltering
 export NMD_RUN_DIR=${2:-$NMD_OUTPUT/full/group_area_20_30_40}
 export TMPDIR=/share/statmind/ywu226/nmd-area-analysis/job-$SLURM_JOB_ID/tmp
+
+# Save the submitted scripts and job details alongside the analysis records
 mkdir -p "$NMD_RUN_DIR/analysis_records" "$TMPDIR"
 NMD_JOB_RECORD="$NMD_RUN_DIR/analysis_records/analysis-job-$SLURM_JOB_ID"
 mkdir -p "$NMD_JOB_RECORD"
@@ -32,8 +34,7 @@ cp "$NMD_CODE/20260313_BayesfMRI2/scripts/04_group_level_area_analysis.R" "$NMD_
 printf '%s\n' "$NMD_CODE_COMMIT" > "$NMD_JOB_RECORD/code_commit.txt"
 scontrol show job "$SLURM_JOB_ID" > "$NMD_JOB_RECORD/slurm_job.txt"
 
-# INLA defaults to up to 16 threads independently of OMP_NUM_THREADS.
-# Only this job's PSOCK workers read this private profile; the main script sets its own option.
+# Request one INLA thread per PSOCK worker. The main R script sets its own thread option.
 export R_PROFILE_USER="$NMD_JOB_RECORD/worker_profile.R"
 cat > "$R_PROFILE_USER" <<'RS'
 library(methods)
@@ -51,6 +52,8 @@ Output directory: $NMD_RUN_DIR
 Logs: $NMD_OUTPUT/logs/analysis-$SLURM_JOB_ID.{out,err}
 EOF
 trap 'nmd_exit=$?; printf "Analysis shell exit: %s at %s\n" "$nmd_exit" "$(date -u)" >> "$NMD_RUN_DIR/run_record.org"' EXIT
+
+# Run from the job's scratch directory and write the models and posterior samples to Projects
 cd "$(dirname "$TMPDIR")"
 hostname
 date -u
