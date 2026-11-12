@@ -12,7 +12,8 @@ record the required software versions and runtime paths.
 
 See [[file:20260313_BayesfMRI2/02_Bayes_fMRI_Area_Filtering.org][BayesfMRI 0.15.0 area-filtered group analysis]] for the full 40-participant
 rerun with shared posterior samples, minimum areas 20/30/40, and paired R/Slurm
-scripts 04 (analysis) and 05 (plots).
+scripts. Script 04 fits and filters the models. The workflow ends with script
+05 exporting the figures.
 Results are reviewed directly through the mounted Projects share at
 =/Volumes/afmejia/Projects/brain_stimulation_utah/20261025_BayesfMRI_AreaFiltering/full/group_area_20_30_40/=.
 The shared directory contains =results/=, =posterior_samples/=,

@@ -38,6 +38,9 @@ below are display surfaces, not replacement geometries for the area calculation.
 
 * Paired scripts and persistent paths
 
+Script 04 fits and filters the group models. Script 05 exports the figures and
+completes the area-filtering workflow.
+
 | Step | R script | Slurm script |
 |------+----------+--------------|
 | 04: fit and filter | [[file:scripts/04_group_level_area_analysis.R][04_group_level_area_analysis.R]] | [[file:scripts/04_group_level_area_analysis.slurm][04_group_level_area_analysis.slurm]] |
@@ -295,30 +298,24 @@ documented rendering environment. Refiltering requires the original posterior
 samples and manifests on Projects. Access those dependencies through the
 documented shared paths; the publication is not a self-contained rerun bundle.
 
-* Directory organization and provenance
+* Completed directory migration (2026-10-27)
 
 The shared run uses =full/group_area_20_30_40/= with =analysis_records/=,
 =posterior_samples/=, =results/=, =plots/= and =tables/=. The previous
 =full/job-1558105/= run and its title-correction replot are consolidated here.
 Only the corrected 95 main PNGs and 30 legends remain in =plots/=.
 
-The organization operation updates active paths in model objects, manifests,
-run information and CSV inventories. It preserves numerical results, posterior
-sample bytes and corrected image bytes; no fitting or plotting is required.
-RDS file checksums change when stored paths change. Current model checksums and
-the before/after migration checksums are stored in =analysis_records/=;
+The migration updated active paths in model objects, manifests, run information
+and CSV inventories. It preserved numerical results, posterior samples and
+corrected images. Updating stored paths changed the affected RDS checksums.
+Current model checksums and the before/after migration checksums are stored in =analysis_records/=;
 pre-migration plotting checksums remain with the historical plot-job records.
 Historical logs, submitted code snapshots and original calls retain their
 original text. The combined =run_record.org= records the path mapping and the
 analysis and plot jobs that actually generated the results.
 
-The one-time maintenance script
-[[file:scripts/06_organize_area_outputs.R][06_organize_area_outputs.R]] performs this migration on Hazel using the
-existing environment and =NMD_CODE_COMMIT=. It checks that no user jobs are
-queued or running, stages path-only RDS replacements, compares all numerical
-contents, and reads checksums for the 500 posterior files and corrected figures.
-Temporary recovery copies remain on Projects until final checks pass and are
-then removed. It stops if the destination or a partial migration already exists;
-inspect that state before any retry. It does not submit a Slurm job or invoke
-analysis, filtering or rendering functions. Completed results require no further
-execution of this maintenance script.
+The [[file:archive/06_organize_area_outputs.R][archived migration script]] records the one-time operation on Hazel. It
+recorded the code revision from =NMD_CODE_COMMIT= and checked that the
+submitting user had no queued or running jobs. It staged the RDS files on
+Projects and verified model contents and checksums for the 500 posterior
+files and the corrected figures before removing the recovery copies.
