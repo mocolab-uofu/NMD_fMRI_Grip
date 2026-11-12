@@ -97,9 +97,8 @@ The volume background is ciftiTools' installed
 | Analysis | statmind_cpu / compute / normal | 4 | 96 GB | 48 hours |
 | Plots | statmind_cpu / compute / normal | 1 | 8 GB | 4 hours |
 
-The existing analysis and title-corrected plots are complete. Directory
-organization does not require submitting either script. The commands below
-are execution instructions for a separately authorized analysis or replot.
+The existing analysis and title-corrected plots are complete. The commands
+below are for a separately authorized analysis or replot.
 
 On a login node, replace the checkout suffix below with the committed revision.
 The output root and logs directory must exist before submitting because Slurm
@@ -287,7 +286,6 @@ The original generating revisions remain:
 |-------+-----+---------------|
 | Analysis | 1558105 | 770122ff9c021c2d401a0c732253d4aad5024c4b |
 | Corrected figures | 1571150 | 5034c3172b1050063fbc603ec6f9e4edc25244c1 |
-| Shared-directory migration | Not a Slurm job | 2e19147a7663e2ab6953fd33aae0f3778e2570a1 |
 
 The publication supports browsing figures and tables and loading the group
 models with =readRDS()=. Model bytes, including their HPC absolute references,
@@ -297,25 +295,3 @@ Script 05 still needs the shared run information, display surfaces, and its
 documented rendering environment. Refiltering requires the original posterior
 samples and manifests on Projects. Access those dependencies through the
 documented shared paths; the publication is not a self-contained rerun bundle.
-
-* Completed directory migration (2026-10-27)
-
-The shared run uses =full/group_area_20_30_40/= with =analysis_records/=,
-=posterior_samples/=, =results/=, =plots/= and =tables/=. The previous
-=full/job-1558105/= run and its title-correction replot are consolidated here.
-Only the corrected 95 main PNGs and 30 legends remain in =plots/=.
-
-The migration updated active paths in model objects, manifests, run information
-and CSV inventories. It preserved numerical results, posterior samples and
-corrected images. Updating stored paths changed the affected RDS checksums.
-Current model checksums and the before/after migration checksums are stored in =analysis_records/=;
-pre-migration plotting checksums remain with the historical plot-job records.
-Historical logs, submitted code snapshots and original calls retain their
-original text. The combined =run_record.org= records the path mapping and the
-analysis and plot jobs that actually generated the results.
-
-The [[file:archive/06_organize_area_outputs.R][archived migration script]] records the one-time operation on Hazel. It
-recorded the code revision from =NMD_CODE_COMMIT= and checked that the
-submitting user had no queued or running jobs. It staged the RDS files on
-Projects and verified model contents and checksums for the 500 posterior
-files and the corrected figures before removing the recovery copies.
