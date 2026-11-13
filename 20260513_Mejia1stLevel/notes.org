@@ -1,0 +1,15 @@
+#+TITLE: 1st level analysis
+
+* Background
+During my visit to Mandy in April of 2026, she suggested to separate the visual and clench part in the first level. So, you would model three events:
+- rest (block)
+- visual stimulus (block)
+- clench (event)
+
+For this, I will need to revisit the ePrime paradigm and see exactly when the clenches occur (e.g., once every 5 seconds).
+
+Mandy sent a few papers explaining why this collinearity (between 'visual' and 'clench') would not be an issue.
+- [[cite:&fox-2005-trans-bold]]
+- [[cite:&mumford-2025-unint-bias]]
+
+On 2026-10-05 I looked more into this. See [[/datadisk/Utah/Kladblok/20201120_Margolis_NMD/20220504_Data_Processing/20261005_BayesfMRI][these]] notes.
