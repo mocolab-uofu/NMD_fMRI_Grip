@@ -46,6 +46,25 @@ completes the area-filtering workflow.
 | 04: fit and filter | [[file:scripts/04_group_level_area_analysis.R][04_group_level_area_analysis.R]] | [[file:scripts/04_group_level_area_analysis.slurm][04_group_level_area_analysis.slurm]] |
 | 05: export figures | [[file:scripts/05_group_level_area_plots.R][05_group_level_area_plots.R]] | [[file:scripts/05_group_level_area_plots.slurm][05_group_level_area_plots.slurm]] |
 
+* Interactive inspection of the completed results
+
+[[file:scripts/06_group_level_map_exports.R][Script 06]] reads the saved models and PNG manifest. Its [[file:scripts/06_group_level_map_exports.slurm][Slurm script]] takes
+the fixed checkout and =first= to export CTR > DEP. Open both surface
+geometries in an offline WebGL browser, rotate the maps, and overlay the
+subcortical mask on the coefficient in FSLeyes. After this check submit the
+same script with the checkout, =remaining= and the first job number.
+The completed =exports/map_manifest.csv= lists 40 self-contained HTML maps
+and 10 three-dimensional NIfTI volumes using paths relative to =exports/=.
+
+Each cortical contrast has an unmasked effect and three area-masked effects
+on both display geometries. Each voxel contrast has an unmasked effect and
+a 0/1 activation map with missing voxels encoded as NaN. Script 06 matches the
+group voxel mask and ordered labels to the first input's activation object
+before restoring its 2 mm spatial transform. Export records are stored in
+=analysis_records/exports-job-JOBID/=.
+
+* Analysis paths and runtime
+
 Local editing directory:
 #+begin_example
 /Users/ywu226/Documents/GitHub/NMD_fMRI_Grip
