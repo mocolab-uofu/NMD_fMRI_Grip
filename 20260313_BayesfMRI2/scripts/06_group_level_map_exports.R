@@ -126,9 +126,12 @@ for (i in which(selected & maps$kind == "surface")) {
   scale <- if (cc <= 2) c(-0.5, 0.5) else c(-1, 1)
   path <- file.path(stage, maps$path[i])
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
+  # Pandoc may retain a dependency directory after embedding its contents. Keep it in job scratch.
+  widget_file <- tempfile(pattern = "surface-", fileext = ".html")
   view_xifti(display, idx = cc, what = "surface", surfL = surface[[1]], surfR = surface[[2]], view = "both",
-             zlim = scale, title = title, width = 1200, height = 800, widget = TRUE, legend_embed = TRUE, fname = path)
+             zlim = scale, title = title, width = 1200, height = 800, widget = TRUE, legend_embed = TRUE, fname = widget_file)
   if (rgl::cur3d() != 0) rgl::close3d()
+  stopifnot(file.copy(widget_file, path, overwrite = TRUE))
   page <- xml2::read_html(path, options = c("HUGE", "NONET", "RECOVER"))
   widgets <- xml2::xml_find_all(page, "//*[contains(@class, 'rglWebGL') and @id]")
   scripts <- xml2::xml_find_all(page, "//script[@type='application/json' and @data-for]")
