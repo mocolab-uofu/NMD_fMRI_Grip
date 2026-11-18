@@ -21,14 +21,20 @@ The shared directory contains =results/=, =posterior_samples/=,
 
 * Published area-filtering results
 
-[[file:20261025_BayesfMRI_AreaFiltering/][Selected results]] from the completed 40-participant analysis contain 131 files
-(about 53.55 MiB), with area thresholds 20, 30, and 40:
+[[file:20261025_BayesfMRI_AreaFiltering/][Selected results]] from the completed 40-participant analysis cover five
+contrasts and cortical area thresholds of 20, 30, and 40.
 
 | Directory | Contents |
 |-----------+----------|
 | [[file:20261025_BayesfMRI_AreaFiltering/plots/][plots/]] | 95 main PNGs, 30 legends, and figure_manifest.csv |
 | [[file:20261025_BayesfMRI_AreaFiltering/tables/][tables/]] | area_summary.csv (30 rows) and cluster_summary.csv (998 rows) |
 | [[file:20261025_BayesfMRI_AreaFiltering/results/][results/]] | bglm2_area_20.rds, bglm2_area_30.rds, and bglm2_area_40.rds |
+| [[file:20261025_BayesfMRI_AreaFiltering/exports/surface/][exports/surface/]] | 40 interactive HTML maps of unmasked and area-masked effects on inflated and very inflated surfaces |
+| [[file:20261025_BayesfMRI_AreaFiltering/exports/volume/][exports/volume/]] | 10 subcortical NIfTI files, one coefficient map and one activation mask per contrast |
+
+Download an HTML file and open it in a browser to rotate the cortical surface.
+For subcortical inspection, open the coefficient and activation files for the
+same contrast together in FSLeyes. See the [[file:20260313_BayesfMRI2/scripts/06_group_level_map_exports.R][map export script]].
 
 Start with the [[file:20261025_BayesfMRI_AreaFiltering/plots/comparisons/][three-area comparison figures]]. Images, tables, and models are
 unchanged copies of the shared originals. Figure-manifest paths are relative

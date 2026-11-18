@@ -53,7 +53,7 @@ the fixed checkout and =first= to export CTR > DEP. Open both surface
 geometries in an offline WebGL browser, rotate the maps, and overlay the
 subcortical mask on the coefficient in FSLeyes. After this check submit the
 same script with the checkout, =remaining= and the first job number.
-The completed =exports/map_manifest.csv= lists 40 self-contained HTML maps
+The shared Projects file =exports/map_manifest.csv= lists 40 self-contained HTML maps
 and 10 three-dimensional NIfTI volumes using paths relative to =exports/=.
 
 Each cortical contrast has an unmasked effect and three area-masked effects
@@ -283,7 +283,7 @@ historical copies.
 
 * Selected GitHub publication
 
-The repository's [[file:../20261025_BayesfMRI_AreaFiltering/][20261025_BayesfMRI_AreaFiltering/]] directory publishes 131 files
+The initial publication in [[file:../20261025_BayesfMRI_AreaFiltering/][20261025_BayesfMRI_AreaFiltering/]] contained 131 files
 (about 53.55 MiB) copied from the completed shared run on 2026-10-30:
 
 | Relative path | Contents |
@@ -298,6 +298,10 @@ relative to the published result directory. Its image checksums, dimensions,
 parameters, generating revisions, and job identifiers are unchanged. The
 shared manifest is unchanged. No analysis, sampling, refiltering, or plotting
 was performed for this publication.
+
+On 2026-11-18 the [[file:../20261025_BayesfMRI_AreaFiltering/exports/][inspection maps]] were added. The 40 HTML files and ten NIfTI
+volumes were exported by jobs 1960162 and 1960444 at revision =2514aaa=.
+Their checksum manifest remains in the shared run's =exports/= directory.
 
 The original generating revisions remain:
 
